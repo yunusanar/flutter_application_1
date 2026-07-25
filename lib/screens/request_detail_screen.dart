@@ -35,7 +35,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       parcalar = p;
       islemler = i;
 
-      // --- DÜZELTME: 0 yerine 0.0 (Ondalıklı sayı desteği) ---
+      // HATA ÇÖZÜMÜ: Başlangıç değeri 0.0 (Double) yapıldı
       double parcaToplami = p.fold(0.0, (sum, item) {
         var fiyat = item['fiyat'] ?? 0;
         return sum + (fiyat is int ? fiyat.toDouble() : fiyat);
@@ -45,7 +45,6 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         var ucret = item['ucret'] ?? 0;
         return sum + (ucret is int ? ucret.toDouble() : ucret);
       });
-      // ------------------------------------------------------
 
       toplam = parcaToplami + islemToplami;
       loading = false;
@@ -55,11 +54,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Talep Detayı"),
-        backgroundColor: Color(0xFF1565C0),
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: Text("Talep Detayı")),
       body: loading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -83,86 +78,47 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     ),
                   ),
                   SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Icon(Icons.receipt_long, color: Colors.grey),
-                      SizedBox(width: 10),
-                      Text(
-                        "Harcamalar & İşlemler",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    "Harcamalar & İşlemler",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Divider(),
                   if (parcalar.isEmpty && islemler.isEmpty)
                     Padding(
                       padding: EdgeInsets.all(20),
-                      child: Text(
-                        "Henüz maliyet girilmemiş.",
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                      child: Text("Maliyet yok."),
                     ),
-
                   ...parcalar.map(
                     (p) => ListTile(
                       dense: true,
-                      leading: Icon(
-                        Icons.settings,
-                        size: 18,
-                        color: Colors.orange,
-                      ),
                       title: Text(p['parcaAdi']),
-                      trailing: Text(
-                        "${p['fiyat']} TL",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      trailing: Text("${p['fiyat']} TL"),
                     ),
                   ),
-
                   ...islemler.map(
                     (i) => ListTile(
                       dense: true,
-                      leading: Icon(
-                        Icons.handyman,
-                        size: 18,
-                        color: Colors.blue,
-                      ),
                       title: Text(i['islemAdi']),
-                      trailing: Text(
-                        "${i['ucret']} TL",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      trailing: Text("${i['ucret']} TL"),
                     ),
                   ),
-
                   Divider(thickness: 2),
                   Container(
                     padding: EdgeInsets.all(15),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.green.shade200),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "TOPLAM TUTAR",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade900,
-                          ),
+                          "TOPLAM",
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           "${toplam.toStringAsFixed(2)} TL",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade900,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

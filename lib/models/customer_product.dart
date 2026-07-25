@@ -20,7 +20,8 @@ class CustomerProduct {
   factory CustomerProduct.fromJson(Map<String, dynamic> json) {
     return CustomerProduct(
       id: json['id'] ?? 0,
-      gercekUrunId: json['gercekUrunId'] ?? 0, // <--- JSON'dan okuyun
+      // Backend'den gelen 'gercekUrunId' ismini burada yakalıyoruz
+      gercekUrunId: json['gercekUrunId'] ?? 0,
       urunBaslik: json['urunBaslik'] ?? "İsimsiz Ürün",
       turu: json['turu'] ?? "Genel",
       resim: json['resim'] ?? "",

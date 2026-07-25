@@ -16,11 +16,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Taleplerim"),
-        backgroundColor: Color(0xFF1565C0),
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: Text("Taleplerim")),
       body: FutureBuilder<List<RequestModel>>(
         future: _requestService.getMyRequests(widget.userId),
         builder: (context, snapshot) {
