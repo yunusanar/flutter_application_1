@@ -469,57 +469,11 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                               ), // Hata/Sorun olduğu için kırmızı kaldı
                             ),
 
-                            // --- YENİ EKLENEN: AI ÖN ANALİZ VE PARÇA ÖNERİSİ ---
-                            Container(
-                              margin: const EdgeInsets.only(top: 10, bottom: 4),
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: colorScheme.secondary.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: colorScheme.secondary.withOpacity(0.3),
-                                  width: 1,
-                                ),
+                            if (isEmri['aiYorum'] != null &&
+                                isEmri['aiYorum'].toString().isNotEmpty)
+                              ExpandableAiBox(
+                                aiYorum: isEmri['aiYorum'].toString(),
                               ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    Icons.auto_awesome,
-                                    color: colorScheme.secondary,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "AI Ön Analiz & Öneri",
-                                          style: TextStyle(
-                                            color: colorScheme.secondary,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        // VERİYİ ZORLA BASTIRIYORUZ: Boş geliyorsa "Veri Boş Geldi" yazacak
-                                        Text(
-                                          isEmri['AiYorum']?.toString() ??
-                                              "Veritabanından AI Yorumu NULL (Boş) geldi!",
-                                          style: TextStyle(
-                                            color: colorScheme.primary,
-                                            fontSize: 12,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
 
                             // --- AI MODÜLÜ BİTİŞİ ---
                           ],
@@ -591,6 +545,93 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
         label: const Text("Rotayı Planla"),
         icon: const Icon(Icons.route),
         // Rengi global temadan alması için eski mavi kodlarını sildik
+      ),
+    );
+  }
+}
+
+class ExpandableAiBox extends StatefulWidget {
+  final String aiYorum;
+
+  const ExpandableAiBox({Key? key, required this.aiYorum}) : super(key: key);
+
+  @override
+  _ExpandableAiBoxState createState() => _ExpandableAiBoxState();
+}
+
+class _ExpandableAiBoxState extends State<ExpandableAiBox> {
+  bool isExpanded = false; // Kutunun açık/kapalı durumunu tutar
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isExpanded = !isExpanded; // Tıklanınca durumu tersine çevir
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(top: 10, bottom: 4),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colorScheme.secondary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: colorScheme.secondary.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.auto_awesome, color: colorScheme.secondary, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "AI Ön Analiz & Öneri",
+                    style: TextStyle(
+                      color: colorScheme.secondary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Metin kısmı: Kapalıysa 2 satır gösterip sonuna '...' koyar, açıksa hepsini gösterir
+                  Text(
+                    widget.aiYorum,
+                    maxLines: isExpanded ? null : 2,
+                    overflow: isExpanded
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  // Eğer kapalıysa (kısa görünüyorsa) "Devamını oku" yazısı çıksın
+                  if (!isExpanded)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        "Tıklayarak tamamını gör...",
+                        style: TextStyle(
+                          color: colorScheme.secondary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
