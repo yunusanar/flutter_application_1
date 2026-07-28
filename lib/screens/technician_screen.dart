@@ -8,6 +8,10 @@ import '../models/spare_part.dart';
 import 'login_screen.dart';
 import 'request_detail_screen.dart';
 import 'route_summaries_screen.dart';
+import 'package:signature/signature.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 
 class TechnicianScreen extends StatefulWidget {
   final String adSoyad;
@@ -64,6 +68,109 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
         SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red),
       );
     }
+  }
+
+  void _imzaAlVeGoreviTamamla(int isEmriId) {
+    // İmza kontrolcüsünü oluşturuyoruz (Kalem kalınlığı ve rengi)
+    final SignatureController _signatureController = SignatureController(
+      penStrokeWidth: 3,
+      penColor: Colors.black,
+      exportBackgroundColor: Colors.white,
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Müşteri İmzası', style: TextStyle(fontSize: 18)),
+          // 1. ÇÖZÜM BURASI: Column'u bir SizedBox içine alıp genişliği zorunlu kılıyoruz
+          content: SizedBox(
+            width: MediaQuery.of(
+              context,
+            ).size.width, // Ekranın alabileceği maksimum genişliği veriyoruz
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("İşlemi onaylamak için lütfen aşağıya imza atınız."),
+                const SizedBox(height: 10),
+
+                // 2. İMZA ALANI: Genişliği sınırlı tutuyoruz
+                Container(
+                  width: double
+                      .infinity, // SizedBox'ın verdiği tüm genişliği kapla
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: Signature(
+                    controller: _signatureController,
+                    height: 200,
+                    backgroundColor: Colors.grey[100]!,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+                // TEMİZLE BUTONU
+                TextButton.icon(
+                  onPressed: () => _signatureController.clear(),
+                  icon: const Icon(Icons.clear, color: Colors.red),
+                  label: const Text(
+                    "Temizle",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () async {
+                if (_signatureController.isNotEmpty) {
+                  final Uint8List? signatureBytes = await _signatureController
+                      .toPngBytes();
+                  if (signatureBytes != null) {
+                    String base64Imza = base64Encode(signatureBytes);
+
+                    await http.put(
+                      Uri.parse(
+                        'http://10.0.2.2:5227/api/ServiceRequests/$isEmriId/tamamla',
+                      ),
+                      headers: {'Content-Type': 'application/json'},
+                      body: json.encode({
+                        'yeniDurum': 'Tamamlandı',
+                        'imzaBase64': base64Imza,
+                      }),
+                    );
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'İş başarıyla tamamlandı ve imza kaydedildi!',
+                        ),
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Lütfen önce imza atınız!')),
+                  );
+                }
+              },
+              child: const Text(
+                'Onayla ve Bitir',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _durumDegistir(int id, String suankiDurum) async {
@@ -225,41 +332,47 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Container(
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: _searchController,
-            onChanged: (value) =>
-                setState(() => _aramaMetni = value.toLowerCase()),
-            style: const TextStyle(color: Colors.black, fontSize: 16),
-            cursorColor: Colors.black,
-            decoration: InputDecoration(
-              hintText: "Müşteri Adı Ara...",
-              hintStyle: const TextStyle(color: Colors.grey),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              fillColor: Colors.transparent, // Tema rengini ezmemesi için
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 8,
+        title: Column(
+          children: [
+            Text("Teknisyen:" + widget.adSoyad),
+
+            Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
               ),
-              prefixIcon: const Icon(Icons.search, color: Colors.grey),
-              suffixIcon: _aramaMetni.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.grey),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _aramaMetni = "");
-                      },
-                    )
-                  : null,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) =>
+                    setState(() => _aramaMetni = value.toLowerCase()),
+                style: const TextStyle(color: Colors.black, fontSize: 16),
+                cursorColor: Colors.black,
+                decoration: InputDecoration(
+                  hintText: "Müşteri Adı Ara...",
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  fillColor: Colors.transparent, // Tema rengini ezmemesi için
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  suffixIcon: _aramaMetni.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _aramaMetni = "");
+                          },
+                        )
+                      : null,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -319,6 +432,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
               var musteri = isEmri['musteriAdi'] ?? "İsimsiz";
               var adres = isEmri['adres'] ?? "Adres Yok";
               var urun = isEmri['urun'] ?? "Cihaz Yok";
+              var kategori = isEmri['kategori'] ?? "Belirsiz";
               var aciklama = isEmri['aciklama'] ?? "-";
               var durum = isEmri['durum'] ?? "Beklemede";
               int id = isEmri['id'] ?? 0;
@@ -352,7 +466,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                           size: 40,
                         ),
                         title: Text(
-                          urun,
+                          "Ürün: $urun $kategori",
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Column(
@@ -522,7 +636,17 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                           ),
                           icon: Icon(tamamlandi ? Icons.undo : Icons.check),
                           label: Text(tamamlandi ? "Geri Al" : "İşi Tamamla"),
-                          onPressed: () => _durumDegistir(id, durum),
+                          onPressed: () {
+                            if (tamamlandi) {
+                              // 1. DURUM: İş zaten tamamlanmış. Teknisyen "Geri Al" butonuna basıyor.
+                              // İmza almaya gerek yok, doğrudan eski durum değiştirme fonksiyonunu çalıştır.
+                              _durumDegistir(id, durum);
+                            } else {
+                              // 2. DURUM: İş bitmemiş. Teknisyen "İşi Tamamla" butonuna basıyor.
+                              // Eski _durumDegistir YERİNE yeni imza fonksiyonunu çağır!
+                              _imzaAlVeGoreviTamamla(id);
+                            }
+                          },
                         ),
                       ),
                     ],

@@ -42,7 +42,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       "urun": talep.urunAdi,
                       "aciklama": talep.aciklama,
                       "durum": talep.durum,
+                      "urunTuru": talep.urunTuru,
                     };
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -61,7 +63,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                     ),
                   ),
                   title: Text(
-                    talep.urunAdi,
+                    talep.urunAdi +
+                        (talep.urunTuru != "Belirsiz"
+                            ? " (${talep.urunTuru})"
+                            : ""),
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(

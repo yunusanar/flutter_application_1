@@ -4,13 +4,14 @@ class RequestModel {
   final String aciklama;
   final String durum;
   final String tarih;
-
+  final String urunTuru;
   RequestModel({
     required this.id,
     required this.urunAdi,
     required this.aciklama,
     required this.durum,
     required this.tarih,
+    required this.urunTuru,
   });
 
   factory RequestModel.fromJson(Map<String, dynamic> json) {
@@ -21,6 +22,7 @@ class RequestModel {
       aciklama: json['aciklama'] ?? json['Aciklama'] ?? "",
       durum: json['durum'] ?? json['Durum'] ?? "Beklemede",
       tarih: json['tarih'] ?? json['Tarih'] ?? "",
+      urunTuru: json['urunTuru'] ?? json['UrunTuru'] ?? "Belirsiz",
     );
   }
 }
