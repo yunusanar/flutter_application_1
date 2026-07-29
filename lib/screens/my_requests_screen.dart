@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../services/request_service.dart';
 import '../models/request_model.dart';
 import 'request_detail_screen.dart';
@@ -16,7 +17,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Taleplerim")),
+      appBar: const GradientAppBar(title: "Taleplerim"),
       body: FutureBuilder<List<RequestModel>>(
         future: _requestService.getMyRequests(widget.userId),
         builder: (context, snapshot) {

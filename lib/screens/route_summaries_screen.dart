@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../services/request_service.dart';
 import 'route_details_screen.dart';
 
@@ -34,10 +35,9 @@ class _RouteSummariesScreenState extends State<RouteSummariesScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Planlanmış Rotalarım"),
-        // Arka plan ve yazı renkleri artık otomatik olarak main.dart'tan geliyor
-      ),
+      appBar: const GradientAppBar(title: 'Planlanmış Rotalar'),
+
+      // Arka plan ve yazı renkleri artık otomatik olarak main.dart'tan geliyor
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : rotalar.isEmpty

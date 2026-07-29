@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../services/request_service.dart';
 
 class RouteDetailsScreen extends StatefulWidget {
@@ -55,24 +56,9 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("${widget.tarih} Rotası"),
-            Text(
-              widget
-                  .teamName, // Hangi ekibin rotası olduğunu alt başlıkta gösteriyoruz
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.normal,
-                color: Colors.white70,
-              ),
-            ),
-          ],
-        ),
-        // Yazı ve ikon rengi global temadan (main.dart) otomatik gelecek
-      ),
+      appBar: GradientAppBar(
+        title: '${widget.tarih} Rotası - ${widget.teamName}',
+      ), // Ekip adı başlığa eklendi
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : gunlukIsler.isEmpty

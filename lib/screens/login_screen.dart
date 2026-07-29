@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/apptheme.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'technician_screen.dart';
@@ -83,98 +84,200 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            // --- ESKİ PARLAK MAVİLER YERİNE YENİ GECE MAVİSİ TONLARI ---
-            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+      // AppBar'daki aynı gradyanı tüm ekrana yayıyoruz
+      body: Stack(
+        children: [
+          // 1. KATMAN: Ana Arka Plan
+          Container(
+            decoration: const BoxDecoration(gradient: AppColors.appBarGradient),
           ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: Colors
-                        .white12, // Arka plana uyumlu şık bir transparanlık
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.build_circle_outlined,
-                    size: 80,
-                    color: Color(
-                      0xFF14B8A6,
-                    ), // --- YENİ TURKUAZ VURGU RENGİ ---
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: const Text(
-                    "ÇÖZÜM ANKASTRE KUMTEL YETKİLİ SERVİSİ",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+
+          // 2. KATMAN: Voltaj Çizgileri (Arka plan dekorasyonu)
+          // Sağ üstte büyük, hafif bulanık bir parlamayla derinlik katıyoruz
+          Positioned(
+            top: -100,
+            right: -80,
+            child: Transform.rotate(
+              angle: -0.5,
+              child: Container(
+                width: 60,
+                height: 500,
+                decoration: BoxDecoration(
+                  color: AppColors.electricBlueLight.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.electricBlue.withOpacity(0.25),
+                      blurRadius: 50,
+                      spreadRadius: 10,
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                Card(
-                  elevation: 8,
-                  // Shape (köşe yuvarlaklığı vb.) ayarları silindi, artık main.dart'tan geliyor
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: "E-Posta",
-                            prefixIcon: Icon(Icons.email),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: "Şifre",
-                            prefixIcon: Icon(Icons.lock),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            // Buton stili silindi. Rengini, boyutunu ve şeklini otomatik olarak main.dart'taki temadan alacak.
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors
-                                          .white, // Turkuaz buton üstünde beyaz loading ikonu
-                                    ),
-                                  )
-                                : const Text("GİRİŞ YAP"),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
+          ),
+          // Sol altta daha ince, destekleyici bir çizgi
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Transform.rotate(
+              angle: -0.5,
+              child: Container(
+                width: 20,
+                height: 300,
+                decoration: BoxDecoration(
+                  color: AppColors.electricBlueLight.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.electricBlue.withOpacity(0.2),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. KATMAN: Giriş Formu (Cam efektiyle)
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // --- LOGO VE BAŞLIK ---
+                    Icon(
+                      Icons
+                          .engineering_rounded, // Uygulama logonu buraya koyabilirsin
+                      size: 80,
+                      color: AppColors.electricBlueLight,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "SERVİS TAKİP",
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Teknik Servis Yönetim Paneli",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.7),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+
+                    // --- FORM KUTUSU (Glassmorphism Etkisi) ---
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(
+                          0.08,
+                        ), // Yarı şeffaf beyaz
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(
+                            0.15,
+                          ), // İnce şeffaf sınır
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          // E-posta Alanı
+                          _buildTextField(
+                            controller: _emailController,
+                            hint: "E-posta",
+                            icon: Icons.email_outlined,
+                          ),
+                          const SizedBox(height: 16),
+                          // Şifre Alanı
+                          _buildTextField(
+                            controller: _passwordController,
+                            hint: "Şifre",
+                            icon: Icons.lock_outline,
+                            isPassword: true,
+                          ),
+                          const SizedBox(height: 32),
+                          // Giriş Butonu
+                          SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    AppColors.electricBlue, // Vurgu rengin
+                                foregroundColor: Colors.white,
+                                elevation: 8,
+                                shadowColor: AppColors.electricBlue.withOpacity(
+                                  0.5,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onPressed: _isLoading ? null : _login,
+                              // Buton stili silindi. Rengini, boyutunu ve şeklini otomatik olarak main.dart'taki temadan alacak.
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors
+                                            .white, // Turkuaz buton üstünde beyaz loading ikonu
+                                      ),
+                                    )
+                                  : const Text("GİRİŞ YAP"),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Text alanlarını temiz tutmak için yardımcı bir metot
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+        prefixIcon: Icon(icon, color: AppColors.electricBlueLight),
+        filled: true,
+        fillColor: Colors.black.withOpacity(0.2), // Kutuların içi daha koyu
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none, // Kenarlık yok, sadece arkaplan
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: AppColors.electricBlueLight.withOpacity(0.5),
+            width: 1.5,
           ),
         ),
       ),

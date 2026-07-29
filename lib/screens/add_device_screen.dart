@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../models/app_models.dart';
 import '../services/auth_service.dart';
 
@@ -86,7 +87,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Yeni Cihaz Kaydı")),
+      appBar: const GradientAppBar(title: 'Yeni Cihaz Kaydı'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(

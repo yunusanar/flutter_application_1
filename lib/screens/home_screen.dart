@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../services/product_service.dart';
 import '../services/request_service.dart';
 import '../models/customer_product.dart';
@@ -116,27 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Merhaba,", style: TextStyle(fontSize: 12)),
-            Text(
-              widget.adSoyad,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        // Eski sabit renkler silindi, artık main.dart'tan besleniyor
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0B132B), Color(0xFF1C2541), Color(0xFF3A506B)],
-            ),
-          ),
-        ),
+      appBar: GradientAppBar(
+        // Metinleri tek bir String içinde birleştiriyoruz
+        title: "Merhaba, ${widget.adSoyad}",
+        //metin soldan başlayacak
+        centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.history),

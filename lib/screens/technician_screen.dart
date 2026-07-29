@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/daily_route_Screen.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import 'package:url_launcher/url_launcher.dart'; // Harita paketi
 import '../services/request_service.dart';
 import '../services/part_service.dart';
@@ -331,58 +332,9 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          children: [
-            Text("Teknisyen:" + widget.adSoyad),
-
-            Container(
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) =>
-                    setState(() => _aramaMetni = value.toLowerCase()),
-                style: const TextStyle(color: Colors.black, fontSize: 16),
-                cursorColor: Colors.black,
-                decoration: InputDecoration(
-                  hintText: "Müşteri Adı Ara...",
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  fillColor: Colors.transparent, // Tema rengini ezmemesi için
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  suffixIcon: _aramaMetni.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.grey),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _aramaMetni = "");
-                          },
-                        )
-                      : null,
-                ),
-              ),
-            ),
-          ],
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0B132B), Color(0xFF1C2541), Color(0xFF3A506B)],
-            ),
-          ),
-        ),
+      // --- 1. KISIM: YENİ APPBAR ---
+      appBar: GradientAppBar(
+        title: "Teknisyen: ${widget.adSoyad}", // Sadece düz metin verdik
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_month),
@@ -405,257 +357,322 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _requestService.getAllRequests(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("Bekleyen iş yok."));
-          }
-
-          var isListesi = snapshot.data!.where((kayit) {
-            var musteri = (kayit['musteriAdi'] ?? "").toString().toLowerCase();
-            return musteri.contains(_aramaMetni);
-          }).toList();
-
-          if (isListesi.isEmpty) {
-            return const Center(child: Text("Kayıt bulunamadı."));
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(10),
-            itemCount: isListesi.length,
-            itemBuilder: (context, index) {
-              var isEmri = isListesi[index];
-              var musteri = isEmri['musteriAdi'] ?? "İsimsiz";
-              var adres = isEmri['adres'] ?? "Adres Yok";
-              var urun = isEmri['urun'] ?? "Cihaz Yok";
-              var kategori = isEmri['kategori'] ?? "Belirsiz";
-              var aciklama = isEmri['aciklama'] ?? "-";
-              var durum = isEmri['durum'] ?? "Beklemede";
-              int id = isEmri['id'] ?? 0;
-              bool tamamlandi = durum == "Tamamlandı";
-
-              var tahminiVaris = isEmri['estimatedArrivalTime'];
-
-              return Card(
-                // Eğer tamamlandıysa çok hafif yeşil, değilse temanın kendi beyazını alır
-                color: tamamlandi ? Colors.green.shade50 : null,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                RequestDetailScreen(talepData: isEmri),
-                          ),
-                        ).then((_) => setState(() {})),
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          tamamlandi
-                              ? Icons.check_circle
-                              : Icons.warning_amber_rounded,
-                          color: tamamlandi
-                              ? Colors.green
-                              : colorScheme.secondary,
-                          size: 40,
-                        ),
-                        title: Text(
-                          "Ürün: $urun $kategori",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 5),
-                            Text(
-                              "Müşteri: $musteri",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            // --- ADRES, HARİTA VE ARAMA BUTONLARI YAN YANA ---
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Sol Taraf: Adres Metni
-                                Expanded(
-                                  child: Text(
-                                    "Adres: $adres",
-                                    style: const TextStyle(
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-
-                                // Sağ Taraf: Aksiyon Butonları
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // 1. ARAMA BUTONU
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors
-                                            .green
-                                            .shade50, // Yeşilin çok açık tonu
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.phone,
-                                          color: Colors.green.shade600,
-                                        ),
-                                        tooltip: "Müşteriyi Ara",
-                                        onPressed: () {
-                                          // API'den gelen telefon numarası
-                                          String tel =
-                                              isEmri['telefon'] ??
-                                              "05000000000";
-                                          // Kendi sayfana yazdığın fonksiyonu çağırıyoruz!
-                                          _musteriyiAra(tel);
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      width: 8,
-                                    ), // İki buton arası boşluk
-                                    // 2. HARİTA BUTONU
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.secondary
-                                            .withOpacity(
-                                              0.1,
-                                            ), // Temanın Turkuaz tonu
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.map,
-                                          color: colorScheme.secondary,
-                                        ),
-                                        tooltip: "Haritada Göster",
-                                        onPressed: () => _haritayiAc(adres),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            // ------------------------------------------------
-                            if (tahminiVaris != null && !tamamlandi)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: 8.0,
-                                  bottom: 4.0,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.access_time_filled,
-                                      size: 16,
-                                      color: colorScheme
-                                          .primary, // Gece Mavisi Saat
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      "Tahmini Varış: $tahminiVaris",
-                                      style: TextStyle(
-                                        color: colorScheme.primary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            const SizedBox(height: 5),
-                            Text(
-                              "Sorun: $aciklama",
-                              style: const TextStyle(
-                                color: Colors.red,
-                              ), // Hata/Sorun olduğu için kırmızı kaldı
-                            ),
-
-                            if (isEmri['aiYorum'] != null &&
-                                isEmri['aiYorum'].toString().isNotEmpty)
-                              ExpandableAiBox(
-                                aiYorum: isEmri['aiYorum'].toString(),
-                              ),
-
-                            // --- AI MODÜLÜ BİTİŞİ ---
-                          ],
-                        ),
-                      ),
-                      const Divider(),
-                      if (!tamamlandi)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 4.0),
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(
-                                    Icons.settings_input_component,
-                                    size: 16,
-                                  ),
-                                  label: const Text("Parça"),
-                                  onPressed: () =>
-                                      _parcaEkleDialog(context, id),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 4.0),
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.handyman, size: 16),
-                                  label: const Text("İşçilik"),
-                                  onPressed: () =>
-                                      _islemEkleDialog(context, id),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: tamamlandi
-                                ? Colors.grey
-                                : Colors.green,
-                          ),
-                          icon: Icon(tamamlandi ? Icons.undo : Icons.check),
-                          label: Text(tamamlandi ? "Geri Al" : "İşi Tamamla"),
-                          onPressed: () {
-                            if (tamamlandi) {
-                              // 1. DURUM: İş zaten tamamlanmış. Teknisyen "Geri Al" butonuna basıyor.
-                              // İmza almaya gerek yok, doğrudan eski durum değiştirme fonksiyonunu çalıştır.
-                              _durumDegistir(id, durum);
-                            } else {
-                              // 2. DURUM: İş bitmemiş. Teknisyen "İşi Tamamla" butonuna basıyor.
-                              // Eski _durumDegistir YERİNE yeni imza fonksiyonunu çağır!
-                              _imzaAlVeGoreviTamamla(id);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+      body: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(16.0), // Kenarlardan biraz boşluk
+            height: 45,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12), // Biraz daha yuvarlak
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-              );
-            },
-          );
-        },
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) =>
+                  setState(() => _aramaMetni = value.toLowerCase()),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
+              cursorColor: Colors.black,
+              decoration: InputDecoration(
+                hintText: "Müşteri Adı Ara...",
+                hintStyle: const TextStyle(color: Colors.grey),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 12,
+                ),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                suffixIcon: _aramaMetni.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _aramaMetni = "");
+                        },
+                      )
+                    : null,
+              ),
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _requestService.getAllRequests(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("Bekleyen iş yok."));
+                }
+
+                var isListesi = snapshot.data!.where((kayit) {
+                  var musteri = (kayit['musteriAdi'] ?? "")
+                      .toString()
+                      .toLowerCase();
+                  return musteri.contains(_aramaMetni);
+                }).toList();
+
+                if (isListesi.isEmpty) {
+                  return const Center(child: Text("Kayıt bulunamadı."));
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: isListesi.length,
+                  itemBuilder: (context, index) {
+                    var isEmri = isListesi[index];
+                    var musteri = isEmri['musteriAdi'] ?? "İsimsiz";
+                    var adres = isEmri['adres'] ?? "Adres Yok";
+                    var urun = isEmri['urun'] ?? "Cihaz Yok";
+                    var kategori = isEmri['kategori'] ?? "Belirsiz";
+                    var aciklama = isEmri['aciklama'] ?? "-";
+                    var durum = isEmri['durum'] ?? "Beklemede";
+                    int id = isEmri['id'] ?? 0;
+                    bool tamamlandi = durum == "Tamamlandı";
+
+                    var tahminiVaris = isEmri['estimatedArrivalTime'];
+
+                    return Card(
+                      // Eğer tamamlandıysa çok hafif yeşil, değilse temanın kendi beyazını alır
+                      color: tamamlandi ? Colors.green.shade50 : null,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      RequestDetailScreen(talepData: isEmri),
+                                ),
+                              ).then((_) => setState(() {})),
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                tamamlandi
+                                    ? Icons.check_circle
+                                    : Icons.warning_amber_rounded,
+                                color: tamamlandi
+                                    ? Colors.green
+                                    : colorScheme.secondary,
+                                size: 40,
+                              ),
+                              title: Text(
+                                "Ürün: $urun $kategori",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Müşteri: $musteri",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  // --- ADRES, HARİTA VE ARAMA BUTONLARI YAN YANA ---
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      // Sol Taraf: Adres Metni
+                                      Expanded(
+                                        child: Text(
+                                          "Adres: $adres",
+                                          style: const TextStyle(
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+
+                                      // Sağ Taraf: Aksiyon Butonları
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          // 1. ARAMA BUTONU
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors
+                                                  .green
+                                                  .shade50, // Yeşilin çok açık tonu
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: IconButton(
+                                              icon: Icon(
+                                                Icons.phone,
+                                                color: Colors.green.shade600,
+                                              ),
+                                              tooltip: "Müşteriyi Ara",
+                                              onPressed: () {
+                                                // API'den gelen telefon numarası
+                                                String tel =
+                                                    isEmri['telefon'] ??
+                                                    "05000000000";
+                                                // Kendi sayfana yazdığın fonksiyonu çağırıyoruz!
+                                                _musteriyiAra(tel);
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 8,
+                                          ), // İki buton arası boşluk
+                                          // 2. HARİTA BUTONU
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: colorScheme.secondary
+                                                  .withOpacity(
+                                                    0.1,
+                                                  ), // Temanın Turkuaz tonu
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: IconButton(
+                                              icon: Icon(
+                                                Icons.map,
+                                                color: colorScheme.secondary,
+                                              ),
+                                              tooltip: "Haritada Göster",
+                                              onPressed: () =>
+                                                  _haritayiAc(adres),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+
+                                  // ------------------------------------------------
+                                  if (tahminiVaris != null && !tamamlandi)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: 8.0,
+                                        bottom: 4.0,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time_filled,
+                                            size: 16,
+                                            color: colorScheme
+                                                .primary, // Gece Mavisi Saat
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            "Tahmini Varış: $tahminiVaris",
+                                            style: TextStyle(
+                                              color: colorScheme.primary,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Sorun: $aciklama",
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                    ), // Hata/Sorun olduğu için kırmızı kaldı
+                                  ),
+
+                                  if (isEmri['aiYorum'] != null &&
+                                      isEmri['aiYorum'].toString().isNotEmpty)
+                                    ExpandableAiBox(
+                                      aiYorum: isEmri['aiYorum'].toString(),
+                                    ),
+
+                                  // --- AI MODÜLÜ BİTİŞİ ---
+                                ],
+                              ),
+                            ),
+                            const Divider(),
+                            if (!tamamlandi)
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 4.0,
+                                      ),
+                                      child: ElevatedButton.icon(
+                                        icon: const Icon(
+                                          Icons.settings_input_component,
+                                          size: 16,
+                                        ),
+                                        label: const Text("Parça"),
+                                        onPressed: () =>
+                                            _parcaEkleDialog(context, id),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 4.0),
+                                      child: ElevatedButton.icon(
+                                        icon: const Icon(
+                                          Icons.handyman,
+                                          size: 16,
+                                        ),
+                                        label: const Text("İşçilik"),
+                                        onPressed: () =>
+                                            _islemEkleDialog(context, id),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: tamamlandi
+                                      ? Colors.grey
+                                      : Colors.green,
+                                ),
+                                icon: Icon(
+                                  tamamlandi ? Icons.undo : Icons.check,
+                                ),
+                                label: Text(
+                                  tamamlandi ? "Geri Al" : "İşi Tamamla",
+                                ),
+                                onPressed: () {
+                                  if (tamamlandi) {
+                                    // 1. DURUM: İş zaten tamamlanmış. Teknisyen "Geri Al" butonuna basıyor.
+                                    // İmza almaya gerek yok, doğrudan eski durum değiştirme fonksiyonunu çalıştır.
+                                    _durumDegistir(id, durum);
+                                  } else {
+                                    // 2. DURUM: İş bitmemiş. Teknisyen "İşi Tamamla" butonuna basıyor.
+                                    // Eski _durumDegistir YERİNE yeni imza fonksiyonunu çağır!
+                                    _imzaAlVeGoreviTamamla(id);
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

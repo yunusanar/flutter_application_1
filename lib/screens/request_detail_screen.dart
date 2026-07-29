@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../services/part_service.dart';
 import '../services/action_service.dart';
 
@@ -54,7 +55,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Talep Detayı")),
+      appBar: const GradientAppBar(title: "Talep Detayı"),
       body: loading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

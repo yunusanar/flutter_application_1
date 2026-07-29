@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../services/request_service.dart'; // Yolunu kendi projene göre düzelt
 
 class DailyRouteScreen extends StatefulWidget {
@@ -189,11 +190,7 @@ class _DailyRouteScreenState extends State<DailyRouteScreen> {
         "${_secilenTarih.day.toString().padLeft(2, '0')}.${_secilenTarih.month.toString().padLeft(2, '0')}.${_secilenTarih.year}";
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Rotayı Belirle",
-        ), // Stil silindi, temadan otomatik gelecek
-      ),
+      appBar: const GradientAppBar(title: 'Rota Oluştur'),
       body: Column(
         children: [
           // --- ÜST PANEL: TARİH VE EKİP SEÇİMİ ---
