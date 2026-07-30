@@ -13,6 +13,8 @@ import 'package:signature/signature.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class TechnicianScreen extends StatefulWidget {
   final String adSoyad;
@@ -73,7 +75,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
 
   void _imzaAlVeGoreviTamamla(int isEmriId) {
     // İmza kontrolcüsünü oluşturuyoruz (Kalem kalınlığı ve rengi)
-    final SignatureController _signatureController = SignatureController(
+    final SignatureController signatureController = SignatureController(
       penStrokeWidth: 3,
       penColor: Colors.black,
       exportBackgroundColor: Colors.white,
@@ -104,7 +106,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                     border: Border.all(color: Colors.grey),
                   ),
                   child: Signature(
-                    controller: _signatureController,
+                    controller: signatureController,
                     height: 200,
                     backgroundColor: Colors.grey[100]!,
                   ),
@@ -113,7 +115,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                 const SizedBox(height: 10),
                 // TEMİZLE BUTONU
                 TextButton.icon(
-                  onPressed: () => _signatureController.clear(),
+                  onPressed: () => signatureController.clear(),
                   icon: const Icon(Icons.clear, color: Colors.red),
                   label: const Text(
                     "Temizle",
@@ -131,8 +133,8 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               onPressed: () async {
-                if (_signatureController.isNotEmpty) {
-                  final Uint8List? signatureBytes = await _signatureController
+                if (signatureController.isNotEmpty) {
+                  final Uint8List? signatureBytes = await signatureController
                       .toPngBytes();
                   if (signatureBytes != null) {
                     String base64Imza = base64Encode(signatureBytes);
@@ -165,6 +167,134 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
               },
               child: const Text(
                 'Onayla ve Bitir',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // İş Emri ID'si ve Çekilen Fotoğrafın dosya yolunu eşleştirir
+  Map<int, File> _isEmriFotograflari = {};
+  final ImagePicker _picker = ImagePicker();
+  Future<void> _fotografCek(int isEmriId) async {
+    try {
+      // Kamerayı açar (imageQuality ile boyutu küçültüyoruz ki interneti yormasın)
+      final XFile? foto = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+      );
+
+      // Eğer kullanıcı fotoğraf çektiyse (geri tuşuna basıp çıkmadıysa)
+      if (foto != null) {
+        setState(() {
+          _isEmriFotograflari[isEmriId] = File(foto.path);
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Fotoğraf başarıyla eklendi!")),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Hata Detayı: $e"),
+            duration: const Duration(
+              seconds: 5,
+            ), // Okuyabilmen için süreyi uzattık
+          ),
+        );
+      }
+    }
+  }
+
+  // Barkodu doğrulanmış (kilidi açılmış) iş emirlerinin ID'lerini tutar
+  final Set<int> _barkoduOnaylananIsler = {};
+  void _barkodOnayDialogAc(int isEmriId) {
+    TextEditingController barkodController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            "Cihaz Barkodu Gerekli",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Bu cihaza işlem yapabilmek için lütfen barkod numarasını okutun veya elle girin.",
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: barkodController,
+                decoration: InputDecoration(
+                  hintText: "Barkod No (Örn: SN-1008)",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  // Barkod Okuyucu İkonu
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      Icons.qr_code_scanner,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    onPressed: () async {
+                      // İLERİDE BURAYA KAMERA PAKETİ EKLENECEK
+                      // Örnek: String res = await FlutterBarcodeScanner.scanBarcode(...);
+                      // barkodController.text = res;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Kamera entegrasyonu yakında eklenecek.",
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("İptal", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+              onPressed: () {
+                if (barkodController.text.isNotEmpty) {
+                  // Barkod girildiyse bu iş emrinin kilidini aç
+                  setState(() {
+                    _barkoduOnaylananIsler.add(isEmriId);
+                  });
+                  Navigator.pop(context); // Dialogu kapat
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Barkod doğrulandı, işlem kilidi açıldı!"),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Lütfen geçerli bir barkod girin!"),
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                "Onayla ve Başla",
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -439,6 +569,17 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                     var tahminiVaris = isEmri['estimatedArrivalTime'];
 
                     return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          12.0,
+                        ), // Kartın köşeleriyle uyumlu
+                        side: BorderSide(
+                          color: const Color(
+                            0xFF0D47A1,
+                          ), // Çok Koyu Mavi (Blue shade 900)
+                          width: 1.0, // İnce, zarif bir çizgi
+                        ),
+                      ),
                       // Eğer tamamlandıysa çok hafif yeşil, değilse temanın kendi beyazını alır
                       color: tamamlandi ? Colors.green.shade50 : null,
                       child: Padding(
@@ -598,71 +739,158 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                               ),
                             ),
                             const Divider(),
-                            if (!tamamlandi)
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
+
+                            // 1. DURUM: EĞER İŞ TAMAMLANDIYSA (Sadece Geri Al butonu görünür)
+                            if (tamamlandi)
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.undo,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    "Geri Al",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  onPressed: () {
+                                    // İş tamamlanmış, tekrar açmak için eski durum değiştirme metodunu çağırıyoruz
+                                    _durumDegistir(id, durum);
+                                  },
+                                ),
+                              )
+                            // 2. DURUM: İŞ TAMAMLANMADIYSA
+                            else
+                            // 2A: Barkod okutulmuşsa (İşlem butonları açılır)
+                            if (_barkoduOnaylananIsler.contains(id))
+                              Column(
                                 children: [
                                   Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 4.0,
-                                      ),
-                                      child: ElevatedButton.icon(
-                                        icon: const Icon(
-                                          Icons.settings_input_component,
-                                          size: 16,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 4.0,
+                                            ),
+                                            child: ElevatedButton.icon(
+                                              icon: const Icon(
+                                                Icons.settings_input_component,
+                                                size: 16,
+                                              ),
+                                              label: const Text(
+                                                "Parça",
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              onPressed: () =>
+                                                  _parcaEkleDialog(context, id),
+                                            ),
+                                          ),
                                         ),
-                                        label: const Text("Parça"),
-                                        onPressed: () =>
-                                            _parcaEkleDialog(context, id),
-                                      ),
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 4.0,
+                                            ),
+                                            child: ElevatedButton.icon(
+                                              icon: const Icon(
+                                                Icons.handyman,
+                                                size: 16,
+                                              ),
+                                              label: const Text(
+                                                "İşçilik",
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              onPressed: () =>
+                                                  _islemEkleDialog(context, id),
+                                            ),
+                                          ),
+                                        ),
+                                        // 3. YENİ EKLENEN FOTOĞRAF BUTONU
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 2.0,
+                                            ),
+                                            child: ElevatedButton.icon(
+                                              style: ElevatedButton.styleFrom(
+                                                // Eğer bu işe ait fotoğraf varsa butonun rengi hafif mavi olur
+                                                backgroundColor:
+                                                    _isEmriFotograflari
+                                                        .containsKey(id)
+                                                    ? colorScheme.primary
+                                                          .withOpacity(0.1)
+                                                    : null,
+                                                foregroundColor:
+                                                    _isEmriFotograflari
+                                                        .containsKey(id)
+                                                    ? colorScheme.primary
+                                                    : null,
+                                              ),
+                                              icon: Icon(
+                                                // Fotoğraf varsa tik işareti, yoksa kamera ikonu gösterir
+                                                _isEmriFotograflari.containsKey(
+                                                      id,
+                                                    )
+                                                    ? Icons.check_circle
+                                                    : Icons.camera_alt,
+                                                size: 16,
+                                              ),
+                                              label: const Text(
+                                                "Foto",
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              onPressed: () => _fotografCek(id),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 4.0),
-                                      child: ElevatedButton.icon(
-                                        icon: const Icon(
-                                          Icons.handyman,
-                                          size: 16,
-                                        ),
-                                        label: const Text("İşçilik"),
-                                        onPressed: () =>
-                                            _islemEkleDialog(context, id),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
                                       ),
+                                      icon: const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                      ),
+                                      label: const Text(
+                                        "İşi Tamamla",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      onPressed: () =>
+                                          _imzaAlVeGoreviTamamla(id),
                                     ),
                                   ),
                                 ],
+                              )
+                            // 2B: Barkod henüz okutulmamışsa (Sadece Kilit Butonu görünür)
+                            else
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: colorScheme.secondary
+                                        .withOpacity(0.1),
+                                    foregroundColor: colorScheme.secondary,
+                                    elevation: 0,
+                                  ),
+                                  icon: const Icon(Icons.qr_code_scanner),
+                                  label: const Text(
+                                    "İşleme Başlamak İçin Barkod Okut",
+                                  ),
+                                  onPressed: () => _barkodOnayDialogAc(id),
+                                ),
                               ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: tamamlandi
-                                      ? Colors.grey
-                                      : Colors.green,
-                                ),
-                                icon: Icon(
-                                  tamamlandi ? Icons.undo : Icons.check,
-                                ),
-                                label: Text(
-                                  tamamlandi ? "Geri Al" : "İşi Tamamla",
-                                ),
-                                onPressed: () {
-                                  if (tamamlandi) {
-                                    // 1. DURUM: İş zaten tamamlanmış. Teknisyen "Geri Al" butonuna basıyor.
-                                    // İmza almaya gerek yok, doğrudan eski durum değiştirme fonksiyonunu çalıştır.
-                                    _durumDegistir(id, durum);
-                                  } else {
-                                    // 2. DURUM: İş bitmemiş. Teknisyen "İşi Tamamla" butonuna basıyor.
-                                    // Eski _durumDegistir YERİNE yeni imza fonksiyonunu çağır!
-                                    _imzaAlVeGoreviTamamla(id);
-                                  }
-                                },
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -694,7 +922,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
 class ExpandableAiBox extends StatefulWidget {
   final String aiYorum;
 
-  const ExpandableAiBox({Key? key, required this.aiYorum}) : super(key: key);
+  const ExpandableAiBox({super.key, required this.aiYorum});
 
   @override
   _ExpandableAiBoxState createState() => _ExpandableAiBoxState();

@@ -3,7 +3,7 @@ import 'package:flutter_application_1/theme/gradient_appbar.dart';
 import '../services/request_service.dart'; // Yolunu kendi projene göre düzelt
 
 class DailyRouteScreen extends StatefulWidget {
-  const DailyRouteScreen({Key? key}) : super(key: key);
+  const DailyRouteScreen({super.key});
 
   @override
   _DailyRouteScreenState createState() => _DailyRouteScreenState();

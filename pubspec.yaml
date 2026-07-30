@@ -37,6 +37,9 @@ dependencies:
   http: ^1.6.0
   url_launcher: ^6.3.2
   signature: ^6.4.0
+  image_picker: ^1.2.3
+  
+  
 
 dev_dependencies:
   flutter_test:

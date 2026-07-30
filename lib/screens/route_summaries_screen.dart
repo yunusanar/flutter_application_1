@@ -4,7 +4,7 @@ import '../services/request_service.dart';
 import 'route_details_screen.dart';
 
 class RouteSummariesScreen extends StatefulWidget {
-  const RouteSummariesScreen({Key? key}) : super(key: key);
+  const RouteSummariesScreen({super.key});
 
   @override
   _RouteSummariesScreenState createState() => _RouteSummariesScreenState();

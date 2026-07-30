@@ -100,7 +100,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                       labelText: "Marka Seçin",
                       border: OutlineInputBorder(),
                     ),
-                    value: _selectedBrand,
+                    initialValue: _selectedBrand,
                     items: _brands
                         .map(
                           (b) => DropdownMenuItem(
@@ -128,7 +128,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                       labelText: "Model Seçin",
                       border: OutlineInputBorder(),
                     ),
-                    value: _selectedProduct,
+                    initialValue: _selectedProduct,
                     items: _filteredProducts
                         .map(
                           (p) =>

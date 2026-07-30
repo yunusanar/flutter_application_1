@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/theme/gradient_appbar.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/request_service.dart';
 
 class RouteDetailsScreen extends StatefulWidget {
@@ -7,10 +8,10 @@ class RouteDetailsScreen extends StatefulWidget {
   final String teamName; // YENİ EKLENDİ: Ekip Adı
 
   const RouteDetailsScreen({
-    Key? key,
+    super.key,
     required this.tarih,
     required this.teamName, // Constructor'a eklendi
-  }) : super(key: key);
+  });
 
   @override
   _RouteDetailsScreenState createState() => _RouteDetailsScreenState();
@@ -156,7 +157,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                                 alignment: Alignment.centerRight,
                                 child: ElevatedButton.icon(
                                   onPressed: () {
-                                    // Harita veya navigasyon aksiyonu buraya gelecek
+                                    _haritayiAc(adres);
                                   },
                                   icon: const Icon(Icons.map, size: 16),
                                   label: const Text("Navigasyon"),
@@ -173,5 +174,26 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
               },
             ),
     );
+  }
+
+  Future<void> _haritayiAc(String adres) async {
+    final Uri googleMapsUrl = Uri.parse(
+      "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(adres)}",
+    );
+
+    try {
+      if (!await launchUrl(
+        googleMapsUrl,
+        mode: LaunchMode.externalApplication,
+      )) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Harita uygulaması bulunamadı.")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Harita açılırken hata oluştu: $e")),
+      );
+    }
   }
 }
